@@ -8,7 +8,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  DAGSTER_CLOUD_URL: ${{ secrets.DAGSTER_CLOUD_URL }}
+  DAGSTER_CLOUD_URL: "http://dagster.cloud/sandy-demo"
 
 jobs:
   parse_workspace:
