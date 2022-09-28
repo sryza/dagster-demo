@@ -1,4 +1,5 @@
-from dagster import Output, asset, repository, with_resources
+from dagster import (Output, asset, load_assets_from_current_module,
+                     repository, with_resources)
 from dagster._utils import file_relative_path
 from dagster_dbt import dbt_cli_resource, load_assets_from_dbt_project
 from dagster_snowflake import build_snowflake_io_manager
@@ -11,6 +12,10 @@ from assets_dbt_python.utils import (connect_to_app_db, fetch_orders,
 
 DBT_PROJECT_DIR = file_relative_path(__file__, "../dbt_project")
 DBT_PROFILES_DIR = file_relative_path(__file__, "../dbt_project/config")
+
+dbt_resource = dbt_cli_resource.configured(
+    {"project_dir": DBT_PROJECT_DIR, "profiles_dir": DBT_PROFILES_DIR}
+)
 
 
 @asset(compute_kind="ingest", key_prefix="raw_data")
@@ -46,7 +51,7 @@ def predicted_orders(daily_order_summary: DataFrame) -> Output[DataFrame]:
 @repository
 def assets_dbt_python():
     return with_resources(
-        dbt_assets + [users, orders] + [predicted_orders],
+        load_assets_from_current_module(),
         resource_defs={
             "io_manager": build_snowflake_io_manager([SnowflakePandasTypeHandler()]).configured(
                 {
@@ -57,8 +62,6 @@ def assets_dbt_python():
                     "warehouse": "ELEMENTL",
                 }
             ),
-            "dbt": dbt_cli_resource.configured(
-                {"project_dir": DBT_PROJECT_DIR, "profiles_dir": DBT_PROFILES_DIR}
-            ),
+            "dbt": dbt_resource,
         },
     )

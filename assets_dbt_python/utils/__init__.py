@@ -1,7 +1,8 @@
 import datetime
 import time
 import uuid
-from typing import Any, Dict, List
+from contextlib import contextmanager
+from typing import Any, Dict
 
 import numpy as np
 import pandas as pd
@@ -72,3 +73,11 @@ def connect_to_app_db():
 
 def to_epoch_seconds(date_array):
     return (pd.to_datetime(date_array) - pd.Timestamp("1970-01-01")) // pd.Timedelta("1s")
+
+
+@contextmanager
+def create_temporary_snowflake_database():
+    try:
+        yield "DEV_SANDY"
+    finally:
+        pass
