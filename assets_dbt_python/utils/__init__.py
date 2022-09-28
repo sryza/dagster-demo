@@ -34,7 +34,7 @@ def random_data(extra_columns: Dict[str, Any], n: int) -> pd.DataFrame:
     data = {"user_id": np.random.randint(0, 1000, size=n), "dt": _random_times(n)}
     for name, dtype in extra_columns.items():
         if dtype == str:
-            data[name] = [uuid.uuid4() for _ in range(n)]
+            data[name] = [str(uuid.uuid4()) for _ in range(n)]
         elif dtype == int:
             data[name] = np.random.randint(0, 100, size=n)
         elif dtype == float:
@@ -67,4 +67,8 @@ def model_func(x, a, b):
 
 
 def connect_to_app_db():
-    pass
+    return None
+
+
+def to_epoch_seconds(date_array):
+    return (pd.to_datetime(date_array) - pd.Timestamp("1970-01-01")) // pd.Timedelta("1s")

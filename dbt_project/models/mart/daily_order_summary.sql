@@ -1,5 +1,5 @@
 select
-        date,
+        order_date,
         count(*) as n_orders,
         count(distinct u.company) as n_companies,
         sum(order_total) as total_revenue

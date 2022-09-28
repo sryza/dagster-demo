@@ -8,11 +8,13 @@ if __name__ == "__main__":
         install_requires=[
             "dagster",
             "dagster-dbt",
+            "dagster-snowflake",
+            "dagster-snowflake-pandas",
             "pandas",
             "numpy",
             "scipy",
             "dbt-core",
-            "dbt-duckdb",
+            "dbt-snowflake",
         ],
         extras_require={"dev": ["dagit", "pytest"]},
     )

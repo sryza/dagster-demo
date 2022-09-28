@@ -4,6 +4,6 @@ select
         purchase_price,
         sku,
         dt,
-        extract('day' from dt) as "date",
+        to_date(dt) as order_date,
         quantity * purchase_price as order_total
 from {{ source('raw_data', 'orders') }}
