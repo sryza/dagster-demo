@@ -1,10 +1,11 @@
-from assets_dbt_python import repository as repository_module
-from assets_dbt_python.repository import dbt_cli_resource
-from assets_dbt_python.utils import create_temporary_snowflake_database
-from dagster import load_assets_from_modules, materialize, with_resources
+from dagster import (load_assets_from_package_module, materialize,
+                     with_resources)
 from dagster_snowflake import build_snowflake_io_manager
 from dagster_snowflake_pandas import SnowflakePandasTypeHandler
 
+from assets_dbt_python import assets as assets_package
+from assets_dbt_python.repository import dbt_cli_resource
+from assets_dbt_python.utils import create_temporary_snowflake_database
 
 SNOWFLAKE_CONFIG = {
     "account": {"env": "SNOWFLAKE_ACCOUNT"},
@@ -15,7 +16,7 @@ SNOWFLAKE_CONFIG = {
 
 
 def test_all_assets():
-    assets = load_assets_from_modules([repository_module])
+    assets = load_assets_from_package_module([assets_package])
 
     with create_temporary_snowflake_database() as snowflake_database_name:
         assets_with_resources = with_resources(

@@ -1,6 +1,6 @@
 from pandas import DataFrame
 
-from assets_dbt_python.repository import predicted_orders
+from assets_dbt_python.assets import predicted_orders
 
 
 def test_predicted_orders():

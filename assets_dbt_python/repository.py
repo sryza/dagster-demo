@@ -1,14 +1,10 @@
-from dagster import (Output, asset, load_assets_from_current_module,
-                     repository, with_resources)
+from dagster import load_assets_from_package_module, repository, with_resources
 from dagster._utils import file_relative_path
-from dagster_dbt import dbt_cli_resource, load_assets_from_dbt_project
+from dagster_dbt import dbt_cli_resource
 from dagster_snowflake import build_snowflake_io_manager
 from dagster_snowflake_pandas import SnowflakePandasTypeHandler
-from pandas import DataFrame, DateOffset, date_range, to_datetime
-from scipy import optimize
 
-from assets_dbt_python.utils import (connect_to_app_db, fetch_orders,
-                                     fetch_users, model_func, to_epoch_seconds)
+from . import assets as assets_package
 
 DBT_PROJECT_DIR = file_relative_path(__file__, "../dbt_project")
 DBT_PROFILES_DIR = file_relative_path(__file__, "../dbt_project/config")
@@ -18,40 +14,10 @@ dbt_resource = dbt_cli_resource.configured(
 )
 
 
-@asset(compute_kind="ingest", key_prefix="raw_data")
-def users() -> DataFrame:
-    return fetch_users(conn=connect_to_app_db())
-
-
-@asset(compute_kind="ingest", key_prefix="raw_data")
-def orders() -> DataFrame:
-    return fetch_orders(conn=connect_to_app_db())
-
-
-dbt_assets = load_assets_from_dbt_project(
-    DBT_PROJECT_DIR, DBT_PROFILES_DIR, node_info_to_group_fn=lambda _: "default"
-)
-
-
-@asset(compute_kind="ml")
-def predicted_orders(daily_order_summary: DataFrame) -> Output[DataFrame]:
-    xdata = to_epoch_seconds(daily_order_summary.order_date)
-    ydata = daily_order_summary.n_orders
-    a, b = tuple(optimize.curve_fit(f=model_func, xdata=xdata, ydata=ydata, p0=[10, 100])[0])
-
-    start_date = daily_order_summary.order_date.max()
-    future_dates = date_range(start_date, to_datetime(start_date) + DateOffset(days=30))
-    predicted_data = model_func(x=to_epoch_seconds(future_dates), a=a, b=b)
-    return Output(
-        DataFrame({"order_date": future_dates, "num_orders": predicted_data}),
-        metadata={"mean_squared_error": (ydata - model_func(xdata, a, b)).mean(), "a": a, "b": b},
-    )
-
-
 @repository
 def assets_dbt_python():
     return with_resources(
-        load_assets_from_current_module(),
+        load_assets_from_package_module(assets_package),
         resource_defs={
             "io_manager": build_snowflake_io_manager([SnowflakePandasTypeHandler()]).configured(
                 {
